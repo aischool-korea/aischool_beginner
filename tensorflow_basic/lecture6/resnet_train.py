@@ -6,8 +6,8 @@ import datetime
 import re
 from tensorflow.contrib import learn
 from tensorflow.keras.datasets.cifar10 import load_data
-import CIFAR.data_helpers as dh
-from CIFAR.resnet import ResNet
+import DNN.data_helpers as dh
+from DNN.resnet import ResNet
 
 # Model Hyperparameters
 tf.flags.DEFINE_float("lr", 0.1, "learning rate (default=0.1)")
@@ -41,7 +41,7 @@ with tf.Graph().as_default():
 
         # Define Training procedure
         global_step = tf.Variable(0, name="global_step", trainable=False)
-        decayed_lr = tf.train.exponential_decay(FLAGS.lr, global_step, 36000, FLAGS.lr_decay, staircase=True)
+        decayed_lr = tf.train.exponential_decay(FLAGS.lr, global_step, 24000, FLAGS.lr_decay, staircase=True)
         optimizer = tf.train.MomentumOptimizer(learning_rate=decayed_lr, momentum=0.9)
         grads_and_vars = optimizer.compute_gradients(resnet.loss)
         train_op = optimizer.apply_gradients(grads_and_vars, global_step=global_step)

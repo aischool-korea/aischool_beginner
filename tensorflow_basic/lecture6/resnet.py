@@ -59,18 +59,15 @@ class ResNet:
             self.accuracy = tf.reduce_mean(tf.cast(correct_predictions, "float"), name="accuracy")
 
 
-    def _conv(self, name, x, in_filters, out_filters):
+    def _conv(self, name, x, filter_size, in_filters, out_filters, strides):
         with tf.variable_scope(name):
-            n = 5 * 5 * out_filters # he 초기화를 위한 크기 계산
+            n = filter_size * filter_size * out_filters # he 초기화를 위한 크기 계산
             # filter size 가로, 세로, input channel, output channel 크기로 filter 초기화
             kernel = tf.get_variable(
-                'DW', [5, 5, in_filters, out_filters],
+                'DW', [filter_size, filter_size, in_filters, out_filters],
                 tf.float32, initializer=tf.random_normal_initializer(stddev=np.sqrt(2.0 / n)))
-            return tf.nn.conv2d(x, kernel, strides=[1, 2, 2, 1], padding='SAME') # convolution 연산
+            return tf.nn.conv2d(x, kernel, strides, padding='SAME') # convolution 연산
 
-
-            biases = tf.get_variable('biases', [output_dim], initializer=tf.constant_initializer(0.0))
-            conv = tf.reshape(tf.nn.bias_add(conv, biases), conv.get_shape())
     def _residual(self, x, in_filter, out_filter, activate_before_residual=False, strides=[1, 1, 1, 1]):
 
         if activate_before_residual:

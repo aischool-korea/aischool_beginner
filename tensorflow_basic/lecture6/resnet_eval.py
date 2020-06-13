@@ -6,7 +6,7 @@ from tensorflow.keras.datasets.cifar10 import load_data
 (x_train_val, y_train_val), (x_test, y_test) = load_data()
 
 # Eval Parameters
-tf.flags.DEFINE_string("checkpoint_dir", "./runs/1580990935/checkpoints", "Checkpoint directory from training run")
+tf.flags.DEFINE_string("checkpoint_dir", "./runs/1581259766/checkpoints", "Checkpoint directory from training run")
 
 FLAGS = tf.flags.FLAGS
 # ==================================================
