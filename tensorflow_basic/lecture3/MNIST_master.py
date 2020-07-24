@@ -10,29 +10,30 @@ mnist = input_data.read_data_sets("MNIST_data/", one_hot=True, validation_size=5
 
 X = tf.placeholder(tf.float32, [None, 784], name="X")
 Y = tf.placeholder(tf.float32, [None, 10], name="Y")
-keep_prob = tf.placeholder(tf.float32, name="keep_prob") # 살릴확률
+keep_prob = tf.placeholder(tf.float32, name="keep_prob") # 살릴확률 0.5
 
 #W1 = tf.Variable(tf.random_normal([784, 600]))
-W1 = tf.get_variable("W1", shape=[784, 600], initializer=tf.contrib.layers.xavier_initializer())
-b1 = tf.Variable(tf.random_normal([600]))
+W1 = tf.get_variable("W1", shape=[784, 300], initializer=tf.contrib.layers.xavier_initializer())
+b1 = tf.Variable(tf.random_normal([300]))
 L1 = tf.nn.relu(tf.matmul(X, W1) + b1)
 L1 = tf.nn.dropout(L1, keep_prob=keep_prob)
 
-W2 = tf.get_variable("W2", shape=[600, 600], initializer=tf.contrib.layers.xavier_initializer())
-b2 = tf.Variable(tf.random_normal([600]))
+W2 = tf.get_variable("W2", shape=[300, 200], initializer=tf.contrib.layers.xavier_initializer())
+b2 = tf.Variable(tf.random_normal([200]))
 L2 = tf.nn.relu(tf.matmul(L1, W2) + b2)
 L2 = tf.nn.dropout(L2, keep_prob=keep_prob)
 
-W3 = tf.get_variable("W3", shape=[600, 800], initializer=tf.contrib.layers.xavier_initializer())
-b3 = tf.Variable(tf.random_normal([800]))
+W3 = tf.get_variable("W3", shape=[200, 100], initializer=tf.contrib.layers.xavier_initializer())
+b3 = tf.Variable(tf.random_normal([100]))
 L3 = tf.nn.relu(tf.matmul(L2, W3) + b3)
 L3 = tf.nn.dropout(L3, keep_prob=keep_prob)
 
-W4 = tf.get_variable("W4", shape=[800, 10], initializer=tf.contrib.layers.xavier_initializer())
+W4 = tf.get_variable("W4", shape=[100, 10], initializer=tf.contrib.layers.xavier_initializer())
 b4 = tf.Variable(tf.random_normal([10]))
 hypothesis = tf.nn.xw_plus_b(L3, W4, b4, name="hypothesis") #L3W4 + b4
 correct_prediction = tf.equal(tf.argmax(hypothesis, 1), tf.argmax(Y, 1)) # Y = [0,0,0,1,0,0,0,0,0,0]
-accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
+# [0.11, 0.01, 0.002, ... 1.9]
+accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32)) #True -> 1.0 False -> 0.0
 summary_op = tf.summary.scalar("accuracy", accuracy)
 # define cost/loss & optimizer
 
@@ -40,7 +41,6 @@ summary_op = tf.summary.scalar("accuracy", accuracy)
 # cost = tf.reduce_mean(-tf.reduce_sum(Y * tf.log(hypothesis), axis=1))
 
 cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=hypothesis, labels=Y))
-
 
 learning_rate = 0.001
 # optimizer = tf.train.GradientDescentOptimizer(learning_rate=learning_rate).minimize(cost)
@@ -56,7 +56,7 @@ training_epochs = 30
 batch_size = 100
 
 # ========================================================================
-timestamp = str(int(time.time()))
+timestamp = str(int(time.time())) #runs/1578546654/checkpoints/
 out_dir = os.path.abspath(os.path.join(os.path.curdir, "runs", timestamp))
 train_summary_dir = os.path.join(out_dir, "summaries", "train")
 train_summary_writer = tf.summary.FileWriter(train_summary_dir, sess.graph)
@@ -78,7 +78,7 @@ for epoch in range(training_epochs):
     total_batch = int(mnist.train.num_examples / batch_size) #iteration 55000/ 100 = 550
 
     for i in range(total_batch):
-        batch_xs, batch_ys = mnist.train.next_batch(batch_size)
+        batch_xs, batch_ys = mnist.train.next_batch(batch_size) # (100, 784), (100, 10)
         feed_dict = {X: batch_xs, Y: batch_ys, keep_prob: dropout}
         c, _, a = sess.run([cost, optimizer, summary_op], feed_dict=feed_dict)
         avg_cost += c / total_batch
@@ -86,9 +86,9 @@ for epoch in range(training_epochs):
     #......
     print('Epoch:', '%04d' % (epoch + 1), 'training cost =', '{:.9f}'.format(avg_cost))
     # ========================================================================
-    train_summary_writer.add_summary(a, early_stopped) ##
+    train_summary_writer.add_summary(a, epoch) ##
     val_accuracy, summaries = sess.run([accuracy, summary_op], feed_dict={X: mnist.validation.images, Y: mnist.validation.labels, keep_prob: 1.0})
-    val_summary_writer.add_summary(summaries, early_stopped) ##
+    val_summary_writer.add_summary(summaries, epoch) ##
     # ========================================================================
     print('Validation Accuracy:', val_accuracy)
     if val_accuracy > max:
