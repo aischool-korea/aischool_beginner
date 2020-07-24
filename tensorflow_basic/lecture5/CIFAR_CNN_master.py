@@ -101,8 +101,8 @@ def next_batch(batch_size, data):
     shuffled_data = data[shuffle_indices]
     num_batches_per_epoch = int((len(data)-1)/batch_size) + 1
     for batch_num in range(num_batches_per_epoch): # 450 - 0...449
-        start_index = batch_num * batch_size
-        end_index = min((batch_num + 1) * batch_size, len(data)) # 45000
+        start_index = batch_num * batch_size # 0, 100, 200, ..., 44900
+        end_index = min((batch_num + 1) * batch_size, len(data)) # 100, 200, 300, ..., 44954
         yield shuffled_data[start_index:end_index]
 
 for epoch in range(training_epochs):
@@ -112,14 +112,15 @@ for epoch in range(training_epochs):
     for batch in batches:
         batch_xs, batch_ys = zip(*batch) #unzip
         feed_dict = {X: batch_xs, Y: batch_ys, keep_prob: dropout_keep}
-        c, _ = sess.run([cost, optimizer], feed_dict=feed_dict)
+        c, _, s = sess.run([cost, optimizer, summary_op], feed_dict=feed_dict)
         avg_cost += c / total_batch
+    train_summary_writer.add_summary(s, epoch)
 
     print('Epoch:', '%04d' % (epoch + 1), 'training cost =', '{:.9f}'.format(avg_cost))
     val_accuracy, summaries = sess.run([accuracy, summary_op],
                                        feed_dict={X: x_val, Y: y_val_one_hot,
                                                   keep_prob: 1.0})
-    val_summary_writer.add_summary(summaries, early_stopped)
+    val_summary_writer.add_summary(summaries, epoch)
     print('Validation Accuracy:', val_accuracy)
     if val_accuracy > max:
         max = val_accuracy
