@@ -17,8 +17,7 @@ W1 = tf.Variable(tf.random_normal([3, 3, 1, 32], stddev=0.01)) #[filter_size, fi
 #    Pool     -> (?, 14, 14, 32)
 L1 = tf.nn.conv2d(X_img, W1, strides=[1, 1, 1, 1], padding='SAME')
 L1 = tf.nn.relu(L1)
-L1 = tf.nn.max_pool(L1, ksize=[1, 2, 2, 1],
-                    strides=[1, 2, 2, 1], padding='SAME')
+L1 = tf.nn.max_pool(L1, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME')
 L1 = tf.nn.dropout(L1, keep_prob=keep_prob)
 
 # L2 ImgIn shape=(?, 14, 14, 32)
@@ -27,10 +26,10 @@ W2 = tf.Variable(tf.random_normal([3, 3, 32, 64], stddev=0.01))
 #    Pool      ->(?, 7, 7, 64)
 L2 = tf.nn.conv2d(L1, W2, strides=[1, 1, 1, 1], padding='SAME')
 L2 = tf.nn.relu(L2)
-L2 = tf.nn.max_pool(L2, ksize=[1, 2, 2, 1],
-                    strides=[1, 2, 2, 1], padding='SAME')
+L2 = tf.nn.max_pool(L2, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME')
 L2 = tf.nn.dropout(L2, keep_prob=keep_prob) #(?, 7, 7, 64)
-L2_flat = tf.reshape(L2, [-1, 7 * 7 * 64])
+#print(tf.shape(L2))
+L2_flat = tf.reshape(L2, [-1, 7 * 7 * 64]) # 7*7*64 = 448 * 7 = 3136
 
 W3 = tf.get_variable("W3", shape=[7 * 7 * 64, 10],
                      initializer=tf.contrib.layers.xavier_initializer())
@@ -77,16 +76,17 @@ for epoch in range(training_epochs):
         c, _ = sess.run([cost, optimizer], feed_dict=feed_dict)
         avg_cost += c / total_batch
 
-    print('Epoch:', '%04d' % (epoch + 1), 'training cost =', '{:.9f}'.format(avg_cost))
-    val_accuracy, summaries = sess.run([accuracy, summary_op],
-                                       feed_dict={X: mnist.validation.images, Y: mnist.validation.labels,
-                                                  keep_prob: 1.0})
-    val_summary_writer.add_summary(summaries, early_stopped)
-    print('Validation Accuracy:', val_accuracy)
-    if val_accuracy > max:
-        max = val_accuracy
-        early_stopped = epoch + 1
-        saver.save(sess, checkpoint_prefix, global_step=early_stopped)
+        if i % 100==0:
+            print('Epoch:', '%04d' % (epoch + 1), 'training cost =', '{:.9f}'.format(avg_cost))
+            val_accuracy, summaries = sess.run([accuracy, summary_op],
+                                               feed_dict={X: mnist.validation.images, Y: mnist.validation.labels,
+                                                          keep_prob: 1.0})
+            val_summary_writer.add_summary(summaries, epoch)
+            print('Validation Accuracy:', val_accuracy)
+            if val_accuracy > max:
+                max = val_accuracy
+                early_stopped = epoch + 1
+                saver.save(sess, checkpoint_prefix, global_step=early_stopped)
 
 print('Learning Finished!')
 print('Validation Max Accuracy:', max)
