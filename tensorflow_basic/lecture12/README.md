@@ -1,1 +1,1 @@
-lecture 12 (16 week version)
+lecture 12 (15 weeks version)
